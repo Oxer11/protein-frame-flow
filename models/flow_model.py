@@ -51,7 +51,7 @@ class FlowModel(nn.Module):
                     edge_embed_out=self._model_conf.edge_embed_size,
                 )
 
-    def forward(self, input_feats):
+    def forward(self, input_feats, return_repr=False):
         node_mask = input_feats['res_mask']
         edge_mask = node_mask[:, None] * node_mask[:, :, None]
         diffuse_mask = input_feats['diffuse_mask']
@@ -89,6 +89,8 @@ class FlowModel(nn.Module):
         init_node_embed = init_node_embed * node_mask[..., None]
         node_embed = init_node_embed * node_mask[..., None]
         edge_embed = init_edge_embed * edge_mask[..., None]
+        feats = {}
+        feats[0] = ((node_embed * node_mask[..., None]).sum(dim=1) / (node_mask[..., None].sum(dim=1) + 1e-10)).detach().cpu()
         for b in range(self._ipa_conf.num_blocks):
             ipa_embed = self.trunk[f'ipa_{b}'](
                 node_embed,
@@ -110,11 +112,18 @@ class FlowModel(nn.Module):
                 edge_embed = self.trunk[f'edge_transition_{b}'](
                     node_embed, edge_embed)
                 edge_embed *= edge_mask[..., None]
+            feats[b+1] = ((node_embed * node_mask[..., None]).sum(dim=1) / (node_mask[..., None].sum(dim=1) + 1e-10)).detach().cpu()
 
         curr_rigids = self.rigids_nm_to_ang(curr_rigids)
         pred_trans = curr_rigids.get_trans()
         pred_rotmats = curr_rigids.get_rots().get_rot_mats()
-        return {
-            'pred_trans': pred_trans,
-            'pred_rotmats': pred_rotmats,
-        }
+        if return_repr:
+            return {
+                'pred_trans': pred_trans,
+                'pred_rotmats': pred_rotmats,
+            }, feats
+        else:
+            return {
+                'pred_trans': pred_trans,
+                'pred_rotmats': pred_rotmats,
+            }

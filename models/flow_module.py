@@ -2,6 +2,7 @@ from typing import Any
 import torch
 import time
 import os
+import copy
 import random
 import wandb
 import numpy as np
@@ -19,7 +20,7 @@ from data import all_atom
 from data import so3_utils
 from data import residue_constants
 from experiments import utils as eu
-from pytorch_lightning.loggers.wandb import WandbLogger
+# from pytorch_lightning.loggers.wandb import WandbLogger
 
 
 class FlowModule(LightningModule):
@@ -352,6 +353,38 @@ class FlowModule(LightningModule):
         )
 
     def predict_step(self, batch, batch_idx):
+        noisy_batch = copy.deepcopy(batch)
+        device = f'cuda:{torch.cuda.current_device()}'
+
+        # [B, N, 3]
+        trans_1 = batch['trans_1']  # Angstrom
+
+        # [B, N, 3, 3]
+        rotmats_1 = batch['rotmats_1']
+
+        # [B, N]
+        diffuse_mask = batch['diffuse_mask']
+        num_batch, num_res = diffuse_mask.shape
+        
+        t = torch.ones((num_batch, num_res), dtype=torch.float, device=device)
+        noisy_batch['so3_t'] = t
+        noisy_batch['r3_t'] = t
+        noisy_batch["trans_t"] = batch['trans_1']
+        noisy_batch["rotmats_t"] = batch['rotmats_1']
+
+        noisy_batch['trans_sc'] = torch.zeros_like(trans_1)
+        res_mask = torch.ones(num_batch, num_res, device=self._device)
+      
+        model_pred, reprs = self.model(noisy_batch, return_repr=True)
+        for i, pdb in enumerate(batch["pdb_name"]):
+            output = {'label': pdb}
+            output['mean_representations'] = {
+                k: reprs[k][i] for k, v in reprs.items()
+            }
+            torch.save(output, os.path.join(self._infer_cfg.output_dir, pdb+".pt"))
+        return reprs
+
+    def sample_step(self, batch, batch_idx):
         del batch_idx # Unused
         device = f'cuda:{torch.cuda.current_device()}'
         interpolant = Interpolant(self._infer_cfg.interpolant) 

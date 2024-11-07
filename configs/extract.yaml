@@ -1,0 +1,27 @@
+# Unconditional sampling
+defaults:
+  - _inference
+  - _self_
+
+data:
+  task: hallucination
+
+  dataset: go
+
+  sampler:
+    # Setting for 40GB GPUs
+    max_batch_size: 64
+    max_num_res_squared: 400_000
+
+
+inference:
+
+  predict_dir: ./inference_outputs/
+  inference_subdir: run_${now:%Y-%m-%d}_${now:%H-%M-%S}
+  task: unconditional
+  seed: 123
+  use_gpu: True
+  num_gpus: 1
+
+  unconditional_ckpt_path: ./weights/last.ckpt
+  output_dir: ./extract_output/go

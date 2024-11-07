@@ -56,6 +56,79 @@ pdb_dataset:
     oligomeric: ['monomeric']
     num_chains: [1]
 
+ec_dataset:
+  seed: ${shared.seed}
+  csv_path: ./metadata/ec_metadata.csv
+  cluster_path: null
+  max_cache_size: ${shared.max_cache_size}
+  cache_num_res: 0
+  inpainting_percent: 1.0
+
+  add_plddt_mask: False
+  max_eval_length: null
+
+  # Eval parameters
+  samples_per_eval_length: null
+  num_eval_lengths: 3000 # null
+
+  # Filtering
+  filter:
+    max_num_res: null
+    min_num_res: null
+    max_coil_percent: null
+    rog_quantile: null
+    oligomeric: null
+    num_chains: null
+
+
+go_dataset:
+  seed: ${shared.seed}
+  csv_path: ./metadata/go_metadata.csv
+  cluster_path: null
+  max_cache_size: ${shared.max_cache_size}
+  cache_num_res: 0
+  inpainting_percent: 1.0
+
+  add_plddt_mask: False
+  max_eval_length: null
+
+  # Eval parameters
+  samples_per_eval_length: null
+  num_eval_lengths: 3000 # null
+
+  # Filtering
+  filter:
+    max_num_res: null
+    min_num_res: null
+    max_coil_percent: null
+    rog_quantile: null
+    oligomeric: null
+    num_chains: null
+
+fold_dataset:
+  seed: ${shared.seed}
+  csv_path: ./metadata/fold_metadata.csv
+  cluster_path: null
+  max_cache_size: ${shared.max_cache_size}
+  cache_num_res: 0
+  inpainting_percent: 1.0
+
+  add_plddt_mask: False
+  max_eval_length: null
+
+  # Eval parameters
+  samples_per_eval_length: null
+  num_eval_lengths: 3000 # null
+
+  # Filtering
+  filter:
+    max_num_res: null
+    min_num_res: null
+    max_coil_percent: null
+    rog_quantile: null
+    oligomeric: null
+    num_chains: null
+
   # Scaffolding
   min_motif_percent: ${shared.min_motif_percent} 
   max_motif_percent: ${shared.max_motif_percent}
