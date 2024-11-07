@@ -2,7 +2,7 @@
 import mdtraj as md
 import numpy as np
 from openfold.np import residue_constants
-from tmtools import tm_align
+# from tmtools import tm_align
 
 
 def calc_tm_score(pos_1, pos_2, seq_1, seq_2):

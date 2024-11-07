@@ -144,7 +144,6 @@ class EvalRunner:
 
         self._datamodule = ProteinData(
             data_cfg=self._data_cfg,
-            dataset_cfg=self._dataset_cfg,
             train_dataset=self._train_dataset,
             valid_dataset=self._valid_dataset
         )

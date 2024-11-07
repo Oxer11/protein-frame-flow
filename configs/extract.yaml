@@ -23,5 +23,5 @@ inference:
   use_gpu: True
   num_gpus: 1
 
-  unconditional_ckpt_path: ./weights/last.ckpt
+  unconditional_ckpt_path: weights/pdb/published.ckpt
   output_dir: ./extract_output/go

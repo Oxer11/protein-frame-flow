@@ -6,7 +6,7 @@ from operator import itemgetter
 from itertools import groupby
 
 import torch
-from einops import rearrange
+# from einops import rearrange
 from openfold.utils.rigid_utils import Rigid, Rotation
 from data import so3_utils
 from data import all_atom

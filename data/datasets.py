@@ -158,6 +158,7 @@ class BaseDataset(Dataset):
 
     @abc.abstractmethod
     def _filter_metadata(self, raw_csv: pd.DataFrame) -> pd.DataFrame:
+        return raw_csv
         pass
 
     def _create_split(self, data_csv):
