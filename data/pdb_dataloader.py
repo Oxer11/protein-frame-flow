@@ -24,6 +24,7 @@ class PdbDataModule(LightningDataModule):
         self.loader_cfg = data_cfg.loader
         self.dataset_cfg = data_cfg.dataset
         self.sampler_cfg = data_cfg.sampler
+        self.batch_size = data_cfg.get("batch_size", 1)
 
     def setup(self, stage: str):
         self._train_dataset = PdbDataset(
@@ -52,6 +53,7 @@ class PdbDataModule(LightningDataModule):
         # )
         return DataLoader(
             self._train_dataset,
+            batch_size=self.batch_size,
             num_workers=num_workers,
             prefetch_factor=None if num_workers == 0 else self.loader_cfg.prefetch_factor,
             pin_memory=False,
