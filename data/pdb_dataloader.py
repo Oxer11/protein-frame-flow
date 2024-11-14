@@ -14,6 +14,7 @@ from openfold.utils import rigid_utils
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler, dist
+from torch.nn.utils.rnn import pad_sequence
 
 
 class PdbDataModule(LightningDataModule):
@@ -36,18 +37,26 @@ class PdbDataModule(LightningDataModule):
 
     def train_dataloader(self, rank=None, num_replicas=None):
         num_workers = self.loader_cfg.num_workers
+        # return DataLoader(
+        #     self._train_dataset,
+        #     batch_sampler=LengthBatcher(
+        #         sampler_cfg=self.sampler_cfg,
+        #         metadata_csv=self._train_dataset.csv,
+        #         rank=rank,
+        #         num_replicas=num_replicas,
+        #     ),
+        #     num_workers=num_workers,
+        #     prefetch_factor=None if num_workers == 0 else self.loader_cfg.prefetch_factor,
+        #     pin_memory=False,
+        #     persistent_workers=True if num_workers > 0 else False,
+        # )
         return DataLoader(
             self._train_dataset,
-            batch_sampler=LengthBatcher(
-                sampler_cfg=self.sampler_cfg,
-                metadata_csv=self._train_dataset.csv,
-                rank=rank,
-                num_replicas=num_replicas,
-            ),
             num_workers=num_workers,
             prefetch_factor=None if num_workers == 0 else self.loader_cfg.prefetch_factor,
             pin_memory=False,
             persistent_workers=True if num_workers > 0 else False,
+            collate_fn=collate_fn,
         )
 
     def val_dataloader(self):
@@ -157,6 +166,43 @@ class PdbDataset(Dataset):
         chain_feats = self._process_csv_row(processed_file_path)
         chain_feats['csv_idx'] = torch.ones(1, dtype=torch.long) * idx
         return chain_feats
+
+
+def collate_fn(batch):
+    """
+    Collate function for batching a dataset with varying sequence lengths.
+    
+    Args:
+        batch (list of dicts): A list where each element is a dictionary containing tensors.
+
+    Returns:
+        dict: A dictionary with batched tensors.
+    """
+    # Separate each key into its own list
+    aatype_list = [item['aatype'] for item in batch]
+    res_idx_list = [item['res_idx'] for item in batch]
+    rotmats_1_list = [item['rotmats_1'] for item in batch]
+    trans_1_list = [item['trans_1'] for item in batch]
+    res_mask_list = [item['res_mask'] for item in batch]
+    
+    # Pad sequences along the first dimension (sequence length) where necessary
+    aatype_padded = pad_sequence(aatype_list, batch_first=True, padding_value=0)
+    res_idx_padded = pad_sequence(res_idx_list, batch_first=True, padding_value=0)
+    rotmats_1_padded = pad_sequence(rotmats_1_list, batch_first=True, padding_value=0.0)
+    trans_1_padded = pad_sequence(trans_1_list, batch_first=True, padding_value=0.0)
+    res_mask_padded = pad_sequence(res_mask_list, batch_first=True, padding_value=0)
+    
+    # # Create masks to identify valid positions
+    # mask = pad_sequence([torch.ones_like(item['aatype'], dtype=torch.bool) for item in batch],
+    #                     batch_first=True, padding_value=False)
+    
+    return {
+        'aatype': aatype_padded,
+        'res_idx': res_idx_padded,
+        'rotmats_1': rotmats_1_padded,
+        'trans_1': trans_1_padded,
+        'res_mask': res_mask_padded,
+    }
 
 
 class LengthBatcher:

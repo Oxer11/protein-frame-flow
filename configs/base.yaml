@@ -68,7 +68,7 @@ experiment:
     aux_loss_use_pair_loss: True
     aux_loss_t_pass: 0.5
   wandb:
-    name: ${data.task}_${data.dataset}
+    name: ${data.task}_${data.dataset}_pad
     project: ProteinGenerativeRepr # se3-fm
   optimizer:
     lr: 0.0001
