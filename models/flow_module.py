@@ -20,7 +20,7 @@ from data import all_atom
 from data import so3_utils
 from data import residue_constants
 from experiments import utils as eu
-# from pytorch_lightning.loggers.wandb import WandbLogger
+from pytorch_lightning.loggers.wandb import WandbLogger
 
 
 class FlowModule(LightningModule):

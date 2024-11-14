@@ -6,7 +6,7 @@ defaults:
 data:
   task: hallucination
 
-  dataset: go
+  dataset: fold # go
 
   sampler:
     # Setting for 40GB GPUs
@@ -24,4 +24,4 @@ inference:
   num_gpus: 1
 
   unconditional_ckpt_path: weights/pdb/published.ckpt
-  output_dir: ./extract_output/go
+  output_dir: ./extract_output/fold # go
