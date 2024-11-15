@@ -49,7 +49,7 @@ pdb_dataset:
 
   # Filtering
   filter:
-    max_num_res: 512
+    max_num_res: 256 # 512
     min_num_res: 60
     max_coil_percent: 0.5
     rog_quantile: 0.96

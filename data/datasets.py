@@ -100,13 +100,13 @@ def _process_csv_row(processed_file_path):
     if torch.isnan(trans_1).any() or torch.isnan(rotmats_1).any():
         raise ValueError(f'Found NaNs in {processed_file_path}')
     return {
-        'res_plddt': res_plddt,
+        'res_plddt': torch.as_tensor(res_plddt),
         'aatype': chain_feats['aatype'],
         'rotmats_1': rotmats_1,
         'trans_1': trans_1,
         'res_mask': res_mask,
-        'chain_idx': new_chain_idx,
-        'res_idx': new_res_idx,
+        'chain_idx': torch.as_tensor(new_chain_idx),
+        'res_idx': torch.as_tensor(new_res_idx),
     }
 
 
