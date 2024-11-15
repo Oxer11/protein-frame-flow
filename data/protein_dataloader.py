@@ -5,6 +5,7 @@ import logging
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler, dist
+from torch.nn.utils.rnn import pad_sequence
 
 
 class ProteinData(LightningDataModule):
@@ -17,21 +18,31 @@ class ProteinData(LightningDataModule):
         self._train_dataset = train_dataset
         self._valid_dataset = valid_dataset
         self._predict_dataset = predict_dataset
+        self.batch_size = data_cfg.get("batch_size", 1)
 
     def train_dataloader(self, rank=None, num_replicas=None):
         num_workers = self.loader_cfg.num_workers
+        # return DataLoader(
+        #     self._train_dataset,
+        #     batch_sampler=LengthBatcher(
+        #         sampler_cfg=self.sampler_cfg,
+        #         metadata_csv=self._train_dataset.csv,
+        #         rank=rank,
+        #         num_replicas=num_replicas,
+        #     ),
+        #     num_workers=num_workers,
+        #     prefetch_factor=None if num_workers == 0 else self.loader_cfg.prefetch_factor,
+        #     pin_memory=False,
+        #     persistent_workers=True if num_workers > 0 else False,
+        # )
         return DataLoader(
             self._train_dataset,
-            batch_sampler=LengthBatcher(
-                sampler_cfg=self.sampler_cfg,
-                metadata_csv=self._train_dataset.csv,
-                rank=rank,
-                num_replicas=num_replicas,
-            ),
+            batch_size=self.batch_size,
             num_workers=num_workers,
             prefetch_factor=None if num_workers == 0 else self.loader_cfg.prefetch_factor,
             pin_memory=False,
             persistent_workers=True if num_workers > 0 else False,
+            collate_fn=collate_fn,
         )
 
     def val_dataloader(self):
@@ -52,6 +63,28 @@ class ProteinData(LightningDataModule):
             prefetch_factor=None if num_workers == 0 else self.loader_cfg.prefetch_factor,
             persistent_workers=True,
         )
+
+
+def collate_fn(batch):
+    """
+    Collate function for batching a dataset with varying sequence lengths.
+    
+    Args:
+        batch (list of dicts): A list where each element is a dictionary containing tensors.
+
+    Returns:
+        dict: A dictionary with batched tensors.
+    """
+    padded_batch = {}
+    for k in batch[0].keys():
+        _list = [item[k] for item in batch]
+        if k == "pdb_name":
+            list_padded = _list
+        else:
+            list_padded = pad_sequence(_list, batch_first=True, padding_value=0)
+        padded_batch[k] = list_padded
+    
+    return padded_batch
 
 
 class LengthBatcher:
